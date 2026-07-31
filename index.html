@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/pazotti-icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Pazotti Check — Gestão de Limpeza e Manutenção</title>
+    <meta name="description" content="Aplicativo PWA oficial do Grupo Pazotti para Gestão de Limpeza, Checklists de Rotina e Manutenção Predial/Operacional." />
+    <meta name="theme-color" content="#1e3a8a" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/pazotti-icon.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  </head>
+  <body class="bg-slate-50 text-slate-900 selection:bg-blue-600 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then((registration) => {
+            console.log('SW registrado com sucesso:', registration.scope);
+          }).catch((err) => {
+            console.warn('Falha ao registrar SW:', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

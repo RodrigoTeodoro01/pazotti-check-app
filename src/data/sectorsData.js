@@ -1,0 +1,58 @@
+export const SECTORS_DATA = [
+  {
+    id: 'escritorios',
+    name: 'Escritórios',
+    description: 'Áreas administrativas, salas de reunião e estações de trabalho',
+    iconName: 'Briefcase',
+    qrCodeValue: 'PAZOTTI-QR-ESCRITORIOS',
+  },
+  {
+    id: 'deposito-produtos',
+    name: 'Depósito de Produtos',
+    description: 'Armazenamento principal de mercadorias e insumos',
+    iconName: 'Package',
+    qrCodeValue: 'PAZOTTI-QR-DEPOSITO-PRODUTOS',
+  },
+  {
+    id: 'deposito-improprios',
+    name: 'Depósito de Impróprios',
+    description: 'Área restrita para segregação de avarias, devoluções e descarte',
+    iconName: 'AlertTriangle',
+    qrCodeValue: 'PAZOTTI-QR-DEPOSITO-IMPROPRIOS',
+  },
+  {
+    id: 'deposito-merchan',
+    name: 'Depósito Merchan',
+    description: 'Materiais publicitários, displays, PDV e brindes promocionais',
+    iconName: 'Tags',
+    qrCodeValue: 'PAZOTTI-QR-DEPOSITO-MERCHAN',
+  },
+  {
+    id: 'banheiros-escritorio',
+    name: 'Banheiros Escritório',
+    description: 'Sanitários sociais e masculinos/femininos do setor administrativo',
+    iconName: 'Droplets',
+    qrCodeValue: 'PAZOTTI-QR-BANHEIROS-ESCRITORIO',
+  },
+  {
+    id: 'banheiros-deposito',
+    name: 'Banheiros Depósito',
+    description: 'Sanitários e vestiários operacionais da área de estocagem',
+    iconName: 'ShowerHead',
+    qrCodeValue: 'PAZOTTI-QR-BANHEIROS-DEPOSITO',
+  },
+  {
+    id: 'cozinha',
+    name: 'Cozinha',
+    description: 'Área de manipulação, cocção, bancadas e higienização de utensílios',
+    iconName: 'Utensils',
+    qrCodeValue: 'PAZOTTI-QR-COZINHA',
+  },
+  {
+    id: 'refeitorio',
+    name: 'Refeitório',
+    description: 'Salão de convivência, alimentação e descanso dos colaboradores',
+    iconName: 'Coffee',
+    qrCodeValue: 'PAZOTTI-QR-REFEITORIO',
+  },
+];
