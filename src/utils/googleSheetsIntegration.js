@@ -58,6 +58,7 @@ export async function sendCleaningToGoogleSheets({
       conformidade: totalItems > 0 ? `${Math.round((completedItems / totalItems) * 100)}%` : '100%',
       status: status || 'Aguardando aprovação',
       comentarioGestor: comment || '—',
+      pazotti: unitName || 'Não informado',
     },
   };
 
@@ -480,7 +481,15 @@ function normalizeSheetCleaningTask(task, idx) {
     finalSectorId = defaultsMap[sLow] || rawSectorName;
   }
 
-  // 3. Normaliza status ('Aprovado' / 'Reprovado' / 'Aguardando aprovação')
+  // 3. Normaliza Unidade (unitId) a partir do campo pazotti, unidade, unitName ou unitId
+  const rawUnitName = String(task.unitId || task.unitName || task.unidade || task.pazotti || '').toLowerCase();
+  let finalUnitId = task.unitId || 'matriz';
+  if (rawUnitName.includes('matriz')) finalUnitId = 'matriz';
+  else if (rawUnitName.includes('filial') || rawUnitName.includes('depósito') || rawUnitName.includes('deposito')) finalUnitId = 'filial';
+  else if (rawUnitName.includes('frios') || rawUnitName.includes('congelados')) finalUnitId = 'frios';
+  else if (rawUnitName.includes('triangulo') || rawUnitName.includes('triângulo') || rawUnitName.includes('uberl')) finalUnitId = 'triangulo';
+
+  // 4. Normaliza status ('Aprovado' / 'Reprovado' / 'Aguardando aprovação')
   let st = String(task.status || '').toLowerCase();
   if (st.includes('aprov')) st = 'approved';
   else if (st.includes('reprov')) st = 'rejected';
@@ -490,6 +499,7 @@ function normalizeSheetCleaningTask(task, idx) {
     ...task,
     id: task.id || `sheet-clean-${idx}`,
     date: validDate,
+    unitId: finalUnitId,
     sectorId: finalSectorId,
     sectorName: rawSectorName || finalSectorId,
     status: st,

@@ -21,7 +21,7 @@ const APPS_SCRIPT_CODE = `function doPost(e) {
       sheet.appendRow([
         d.dataHora, d.unidade, d.setor, d.periodicidade, 
         d.colaborador, d.itensConcluidos, d.conformidade, 
-        d.status, d.comentarioGestor
+        d.status, d.comentarioGestor, d.unidade
       ]);
     } else if (action === 'ADD_MAINTENANCE_ROW') {
       var sheet = doc.getSheetByName('Manutencao_Chamados') || doc.insertSheet('Manutencao_Chamados');
@@ -170,7 +170,7 @@ function getSheetHistory(doc) {
       for (var i = 1; i < dataClean.length; i++) {
         var r = dataClean[i];
         var dh = r[0];
-        var un = String(r[1] || '').trim();
+        var un = String(r[1] || r[9] || '').trim();
         var st = String(r[2] || '').trim();
         var pr = String(r[3] || '').trim();
         var cb = String(r[4] || '').trim();
