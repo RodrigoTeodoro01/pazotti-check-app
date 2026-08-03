@@ -421,12 +421,78 @@ export function getTaskChecklistItems(task) {
 }
 
 /**
+ * Normaliza tarefas de limpeza recebidas do Google Sheets (corrige formato de data DD/MM/YYYY, preserva ID de setores personalizados e traduz status)
+ */
+function normalizeSheetCleaningTask(task, idx) {
+  if (!task) return null;
+
+  // 1. Corrige data DD/MM/YYYY do completedAt / date para YYYY-MM-DD
+  let validDate = task.date || '';
+  const rawDateStr = String(task.completedAt || task.date || '').trim();
+  const mBr = rawDateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (mBr) {
+    const d = ('0' + mBr[1]).slice(-2);
+    const mo = ('0' + mBr[2]).slice(-2);
+    const yr = mBr[3];
+    validDate = `${yr}-${mo}-${d}`;
+  } else if (!validDate) {
+    validDate = new Date().toISOString().split('T')[0];
+  }
+
+  // 2. Garante ID do setor correto para setores personalizados ou padrão da planilha
+  let finalSectorId = task.sectorId || 'escritorios';
+  const rawSectorName = String(task.sectorName || task.setor || task.sectorId || '').trim();
+  if (rawSectorName) {
+    const sLow = rawSectorName.toLowerCase();
+    const defaultsMap = {
+      'escritorios': 'escritorios',
+      'escritórios': 'escritorios',
+      'escritorio': 'escritorios',
+      'escritório': 'escritorios',
+      'deposito de produtos': 'deposito-produtos',
+      'depósito de produtos': 'deposito-produtos',
+      'deposito de improprios': 'deposito-improprios',
+      'depósito de impróprios': 'deposito-improprios',
+      'deposito merchan': 'deposito-merchan',
+      'depósito merchan': 'deposito-merchan',
+      'banheiros escritorio': 'banheiros-escritorio',
+      'banheiros escritório': 'banheiros-escritorio',
+      'banheiros deposito': 'banheiros-deposito',
+      'banheiros depósito': 'banheiros-deposito',
+      'cozinha': 'cozinha',
+      'refeitorio': 'refeitorio',
+      'refeitório': 'refeitorio',
+    };
+    finalSectorId = defaultsMap[sLow] || rawSectorName;
+  }
+
+  // 3. Normaliza status ('Aprovado' / 'Reprovado' / 'Aguardando aprovação')
+  let st = String(task.status || '').toLowerCase();
+  if (st.includes('aprov')) st = 'approved';
+  else if (st.includes('reprov')) st = 'rejected';
+  else if (st.includes('aguard') || st === 'pending') st = 'pending';
+
+  return {
+    ...task,
+    id: task.id || `sheet-clean-${idx}`,
+    date: validDate,
+    sectorId: finalSectorId,
+    sectorName: rawSectorName || finalSectorId,
+    status: st,
+  };
+}
+
+/**
  * Deduplica tarefas de limpeza mantendo a versão com o status mais recente (ex: Aprovado sobressai Aguardando aprovação)
  */
 function deduplicateCleaningTasks(tasks) {
   if (!Array.isArray(tasks)) return [];
+  const normalized = tasks
+    .map((t, idx) => normalizeSheetCleaningTask(t, idx))
+    .filter(Boolean);
+
   const map = new Map();
-  tasks.forEach((t) => {
+  normalized.forEach((t) => {
     const key = `${t.unitId}_${t.sectorId}_${t.frequency}_${t.date}_${t.userName}`;
     const existing = map.get(key);
     if (!existing || t.status === 'approved' || t.status === 'rejected') {

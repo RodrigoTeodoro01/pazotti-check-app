@@ -193,16 +193,26 @@ function getSheetHistory(doc) {
         if (prLow.indexOf('men') >= 0) freq = 'mensal';
         
         var dateStr = '';
-        try {
-          dateStr = dh ? new Date(dh).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-        } catch(e) {
-          dateStr = new Date().toISOString().split('T')[0];
+        var dhStr = String(dh || '').trim();
+        var mBr = dhStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (mBr) {
+          var d = ('0' + mBr[1]).slice(-2);
+          var mo = ('0' + mBr[2]).slice(-2);
+          var yr = mBr[3];
+          dateStr = yr + '-' + mo + '-' + d;
+        } else {
+          try {
+            dateStr = dh ? new Date(dh).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+          } catch(e) {
+            dateStr = new Date().toISOString().split('T')[0];
+          }
         }
         
         cleaningTasks.push({
           id: 'sheet-clean-' + i,
           unitId: resolveUnitId(un),
           sectorId: resolveSectorId(st),
+          sectorName: st || resolveSectorId(st),
           frequency: freq,
           completedItems: comp,
           totalItems: tot,
@@ -279,17 +289,18 @@ function resolveUnitId(name) {
 }
 
 function resolveSectorId(name) {
-  var s = String(name || '').toLowerCase();
-  if (s.indexOf('analise') >= 0 || s.indexOf('análise') >= 0 || s.indexOf('vendas') >= 0 || s.indexOf('compras') >= 0) return 'escritorios';
-  if (s.indexOf('escrit') >= 0) return 'escritorios';
-  if (s.indexOf('improprio') >= 0 || s.indexOf('impróprio') >= 0) return 'deposito-improprios';
-  if (s.indexOf('merchan') >= 0) return 'deposito-merchan';
-  if (s.indexOf('produto') >= 0 || s.indexOf('depósito') >= 0 || s.indexOf('deposito') >= 0) return 'deposito-produtos';
-  if (s.indexOf('banheiro') >= 0 && s.indexOf('escrit') >= 0) return 'banheiros-escritorio';
-  if (s.indexOf('banheiro') >= 0) return 'banheiros-deposito';
-  if (s.indexOf('cozinha') >= 0) return 'cozinha';
-  if (s.indexOf('refeit') >= 0) return 'refeitorio';
-  return 'escritorios';
+  if (!name) return 'escritorios';
+  var sClean = String(name).trim();
+  var s = sClean.toLowerCase();
+  if (s === 'escritorios' || s === 'escritórios' || s === 'escritorio' || s === 'escritório') return 'escritorios';
+  if (s === 'deposito de produtos' || s === 'depósito de produtos') return 'deposito-produtos';
+  if (s === 'deposito de improprios' || s === 'depósito de impróprios') return 'deposito-improprios';
+  if (s === 'deposito merchan' || s === 'depósito merchan') return 'deposito-merchan';
+  if (s === 'banheiros escritorio' || s === 'banheiros escritório') return 'banheiros-escritorio';
+  if (s === 'banheiros deposito' || s === 'banheiros depósito') return 'banheiros-deposito';
+  if (s === 'cozinha') return 'cozinha';
+  if (s === 'refeitorio' || s === 'refeitório') return 'refeitorio';
+  return sClean;
 }
 
 function doGet(e) {

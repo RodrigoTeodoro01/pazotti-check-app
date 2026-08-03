@@ -276,7 +276,7 @@ export default function ManagerDashboard({ onOpenLogin }) {
       {activeTab === 'approvals' && (
         <div className="space-y-4">
           {pendingTasks.map((t) => {
-            const secName = SECTORS_DATA.find((s) => s.id === t.sectorId)?.name || t.sectorId;
+            const secName = t.sectorName || SECTORS_DATA.find((s) => s.id === t.sectorId)?.name || t.sectorId;
             const unitObj = UNITS_DATA.find((u) => u.id === t.unitId);
             const unitLabel = unitObj ? unitObj.name : t.unitId;
             return (
