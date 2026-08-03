@@ -12,7 +12,8 @@ import {
   ArrowRight,
   Flame,
   Table,
-  UserCircle
+  UserCircle,
+  Trash2
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useData } from '../../context/DataContext';
@@ -33,8 +34,15 @@ export default function ManagerDashboard({ onOpenLogin }) {
     approveCleaningTask, 
     rejectCleaningTask, 
     updateMaintenanceStatus,
-    getUnitStatistics 
+    getUnitStatistics,
+    clearAllLocalHistory
   } = useData();
+
+  const handleClearHistory = () => {
+    if (window.confirm('Deseja zerar todo o histórico acumulado no aplicativo? Esta ação limpa os dados e estatísticas salvos no navegador para ficar 100% limpo com a sua planilha.')) {
+      clearAllLocalHistory();
+    }
+  };
 
   const [activeTab, setActiveTab] = useState('approvals'); // 'approvals' | 'maintenances' | 'emails'
   const [selectedTaskForApproval, setSelectedTaskForApproval] = useState(null);
@@ -113,10 +121,19 @@ export default function ManagerDashboard({ onOpenLogin }) {
 
           <button
             onClick={() => setShowMonthlyReport(true)}
-            className="px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 shrink-0"
+            className="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 shrink-0"
           >
             <FileText className="w-4 h-4 text-unit-secondary" />
-            <span>Relatório Mensal Consolidado</span>
+            <span>Relatório Mensal</span>
+          </button>
+
+          <button
+            onClick={handleClearHistory}
+            className="px-4 py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-800 font-extrabold text-xs transition-all flex items-center gap-1.5 shrink-0 border border-rose-200"
+            title="Zerar Dados e Histórico Salvos no Navegador"
+          >
+            <Trash2 className="w-4 h-4 text-rose-600" />
+            <span>Zerar Histórico</span>
           </button>
         </div>
       </div>

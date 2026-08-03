@@ -10,91 +10,19 @@ import {
 
 const DataContext = createContext();
 
-// Dados iniciais para demonstração gerencial e auditoria de checklist
-const INITIAL_CLEANING_TASKS = [
-  {
-    id: 'clean-101',
-    unitId: 'matriz',
-    sectorId: 'cozinha',
-    frequency: 'diaria',
-    completedItems: 5,
-    totalItems: 5,
-    userName: 'Carlos Rodrigo',
-    completedAt: '2026-07-31T09:30:00.000Z',
-    date: '2026-07-31',
-    status: 'pending', // 'pending' | 'approved' | 'rejected'
-    rejectReason: '',
-    beforePhotos: [],
-    afterPhotos: [],
-  },
-  {
-    id: 'clean-102',
-    unitId: 'matriz',
-    sectorId: 'escritorios',
-    frequency: 'diaria',
-    completedItems: 5,
-    totalItems: 5,
-    userName: 'Mariana Lima',
-    completedAt: '2026-07-30T17:45:00.000Z',
-    date: '2026-07-30',
-    status: 'approved',
-    rejectReason: '',
-    beforePhotos: [],
-    afterPhotos: [],
-  },
-  {
-    id: 'clean-103',
-    unitId: 'filial',
-    sectorId: 'deposito-improprios',
-    frequency: 'semanal',
-    completedItems: 3,
-    totalItems: 3,
-    userName: 'Marcos Silva',
-    completedAt: '2026-07-31T11:15:00.000Z',
-    date: '2026-07-31',
-    status: 'pending',
-    rejectReason: '',
-    beforePhotos: [],
-    afterPhotos: [],
-  },
-];
-
-const INITIAL_MAINTENANCE_TICKETS = [
-  {
-    id: 'maint-201',
-    unitId: 'matriz',
-    sectorId: 'refeitorio',
-    priority: 'Urgência',
-    description: 'Vazamento intenso na tubulação da pia principal do refeitório.',
-    comments: 'Água se espalhando no piso, risco de escorregamento para os funcionários.',
-    photos: [],
-    status: 'Aberto', // 'Aberto' | 'Em andamento' | 'Concluído'
-    authorName: 'Carlos Rodrigo',
-    createdAt: '2026-07-31T12:00:00.000Z',
-  },
-  {
-    id: 'maint-202',
-    unitId: 'frios',
-    sectorId: 'deposito-produtos',
-    priority: 'Corretiva',
-    description: 'Luminária central piscando e com ruído no reator.',
-    comments: 'Solicitada substituição por painel LED.',
-    photos: [],
-    status: 'Em andamento',
-    authorName: 'Ana Souza',
-    createdAt: '2026-07-30T14:20:00.000Z',
-  },
-];
+// Dados iniciais (começam vazios para respeitar a planilha zerada)
+const INITIAL_CLEANING_TASKS = [];
+const INITIAL_MAINTENANCE_TICKETS = [];
 
 export function DataProvider({ children }) {
   const [cleaningTasks, setCleaningTasks] = useState(() => {
     const saved = localStorage.getItem('pazotti_cleaning_tasks');
-    return saved ? JSON.parse(saved) : INITIAL_CLEANING_TASKS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [maintenanceTickets, setMaintenanceTickets] = useState(() => {
     const saved = localStorage.getItem('pazotti_maint_tickets');
-    return saved ? JSON.parse(saved) : INITIAL_MAINTENANCE_TICKETS;
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [offlineQueue, setOfflineQueue] = useState(() => {
@@ -335,6 +263,16 @@ export function DataProvider({ children }) {
     };
   };
 
+  const clearAllLocalHistory = () => {
+    setCleaningTasks([]);
+    setMaintenanceTickets([]);
+    setEmailLogs([]);
+    setOfflineQueue([]);
+    localStorage.removeItem('pazotti_cleaning_tasks');
+    localStorage.removeItem('pazotti_maint_tickets');
+    localStorage.removeItem('pazotti_offline_queue');
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -350,6 +288,7 @@ export function DataProvider({ children }) {
         updateMaintenanceStatus,
         syncOfflineQueue,
         getUnitStatistics,
+        clearAllLocalHistory,
       }}
     >
       {children}
