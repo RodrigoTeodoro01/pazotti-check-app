@@ -1,34 +1,34 @@
 {
-  "id": "/",
+  "id": "/pazotti-check-app/",
   "name": "Pazotti Check — Gestão de Limpeza e Manutenção",
   "short_name": "Pazotti Check",
   "description": "App PWA de Gestão de Limpeza, Checklists e Manutenção para o Grupo Pazotti (5 Unidades)",
-  "start_url": "/",
+  "start_url": "/pazotti-check-app/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#1e3a8a",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/pazotti-check-app/icon-192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/pazotti-check-app/icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/pazotti-check-app/icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
     },
     {
-      "src": "/pazotti-icon.svg",
+      "src": "/pazotti-check-app/pazotti-icon.svg",
       "type": "image/svg+xml",
       "sizes": "192x192 512x512",
       "purpose": "any"

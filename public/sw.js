@@ -1,9 +1,9 @@
 const CACHE_NAME = 'pazotti-check-cache-v1';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/pazotti-icon.svg'
+  '/pazotti-check-app/',
+  '/pazotti-check-app/index.html',
+  '/pazotti-check-app/manifest.json',
+  '/pazotti-check-app/pazotti-icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
