@@ -1,9 +1,30 @@
-import React, { useState } from 'react';
-import { QrCode, Camera, Printer, X, Check, ArrowRight, ScanLine, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { QrCode, Camera, Printer, X, Check, ScanLine, Download } from 'lucide-react';
+import { renderQrToDataUrl } from '../../utils/qrCodeGenerator';
 
 export default function QrCodeModal({ sector, isOpen, onClose, onScanSuccess }) {
   const [scanning, setScanning] = useState(false);
   const [simulatedScan, setSimulatedScan] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState(null);
+  const printRef = useRef(null);
+
+  // Gera o QR Code real quando o modal abre
+  useEffect(() => {
+    if (isOpen && sector) {
+      // Dados que o QR Code vai conter: URL do app + setor
+      const baseUrl = window.location.origin + import.meta.env.BASE_URL;
+      const qrData = `${baseUrl}?sector=${sector.id}`;
+      
+      try {
+        const dataUrl = renderQrToDataUrl(qrData, 8, 4);
+        setQrDataUrl(dataUrl);
+      } catch (err) {
+        console.warn('Fallback para QR Code via API:', err);
+        // Fallback para API online
+        setQrDataUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&format=png&margin=8`);
+      }
+    }
+  }, [isOpen, sector]);
 
   if (!isOpen || !sector) return null;
 
@@ -21,7 +42,64 @@ export default function QrCodeModal({ sector, isOpen, onClose, onScanSuccess }) 
   };
 
   const handlePrint = () => {
-    window.print();
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>QR Code — ${sector.name}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            display: flex; align-items: center; justify-content: center; 
+            min-height: 100vh; font-family: 'Segoe UI', Arial, sans-serif;
+            background: white;
+          }
+          .etiqueta {
+            border: 3px solid #0f172a; border-radius: 16px;
+            padding: 24px; text-align: center; max-width: 320px;
+          }
+          .etiqueta h2 { font-size: 14px; color: #1e3a8a; margin-bottom: 4px; }
+          .etiqueta h1 { font-size: 20px; color: #0f172a; margin-bottom: 16px; }
+          .etiqueta img { width: 200px; height: 200px; display: block; margin: 0 auto 12px; }
+          .etiqueta .code { 
+            font-family: monospace; font-size: 11px; color: #475569; 
+            background: #f1f5f9; padding: 4px 12px; border-radius: 20px;
+            display: inline-block;
+          }
+          .etiqueta .instrucao {
+            margin-top: 12px; font-size: 10px; color: #94a3b8;
+          }
+          @media print { body { margin: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="etiqueta">
+          <h2>Grupo Pazotti — Portal Check</h2>
+          <h1>${sector.name}</h1>
+          <img src="${qrDataUrl}" alt="QR Code ${sector.name}" />
+          <div class="code">${sector.qrCodeValue}</div>
+          <p class="instrucao">Escaneie para abrir o checklist deste setor</p>
+        </div>
+        <script>
+          window.onload = function() { 
+            setTimeout(function() { window.print(); }, 300); 
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const handleDownload = () => {
+    if (!qrDataUrl) return;
+    const link = document.createElement('a');
+    link.download = `qrcode-${sector.id}.png`;
+    link.href = qrDataUrl;
+    link.click();
   };
 
   return (
@@ -52,29 +130,26 @@ export default function QrCodeModal({ sector, isOpen, onClose, onScanSuccess }) 
             Este QR Code oficial pode ser afixado na porta do setor <strong>{sector.name}</strong> para abertura direta do checklist sem erro de digitação.
           </p>
 
-          {/* Cartão de QR Code Simulado Visualmente */}
-          <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-6 max-w-[240px] mx-auto flex flex-col items-center justify-center shadow-inner">
-            <div className="w-40 h-40 bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-center shadow-sm relative overflow-hidden group">
-              {/* Representação visual elegante em grade de QR Code */}
-              <div className="grid grid-cols-7 gap-1 w-full h-full text-slate-900">
-                <div className="col-span-2 row-span-2 bg-slate-900 rounded-md"></div>
-                <div className="col-span-1 bg-slate-400"></div>
-                <div className="col-span-2 bg-slate-900"></div>
-                <div className="col-span-2 row-span-2 bg-slate-900 rounded-md"></div>
-                <div className="col-span-1 bg-slate-900"></div>
-                <div className="col-span-3 bg-slate-400"></div>
-                <div className="col-span-1 bg-slate-900"></div>
-                <div className="col-span-2 row-span-2 bg-slate-900 rounded-md"></div>
-                <div className="col-span-2 bg-slate-400"></div>
-                <div className="col-span-3 bg-slate-900"></div>
-                <div className="col-span-7 bg-slate-200 h-1"></div>
-                <div className="col-span-3 bg-slate-900"></div>
-                <div className="col-span-2 bg-slate-400"></div>
-                <div className="col-span-2 bg-slate-900"></div>
-              </div>
+          {/* QR Code Real */}
+          <div 
+            ref={printRef}
+            className="bg-white border-2 border-slate-200 rounded-2xl p-5 max-w-[260px] mx-auto flex flex-col items-center justify-center shadow-sm"
+          >
+            <div className="w-48 h-48 flex items-center justify-center relative">
+              {qrDataUrl ? (
+                <img 
+                  src={qrDataUrl} 
+                  alt={`QR Code para ${sector.name}`}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-slate-50 rounded-xl">
+                  <div className="animate-spin w-8 h-8 border-3 border-unit-primary border-t-transparent rounded-full" />
+                </div>
+              )}
 
               {scanning && (
-                <div className="absolute inset-0 bg-unit-secondary/20 flex flex-col items-center justify-center backdrop-blur-[1px]">
+                <div className="absolute inset-0 bg-unit-secondary/20 flex flex-col items-center justify-center backdrop-blur-[1px] rounded-xl">
                   <ScanLine className="w-10 h-10 text-unit-secondary animate-bounce" />
                   <span className="text-[10px] font-bold text-unit-primary bg-white px-2 py-0.5 rounded shadow mt-1">
                     Lendo QR...
@@ -83,19 +158,23 @@ export default function QrCodeModal({ sector, isOpen, onClose, onScanSuccess }) 
               )}
 
               {simulatedScan && (
-                <div className="absolute inset-0 bg-emerald-600/90 flex flex-col items-center justify-center text-white">
+                <div className="absolute inset-0 bg-emerald-600/90 flex flex-col items-center justify-center text-white rounded-xl">
                   <Check className="w-10 h-10" />
                   <span className="text-xs font-bold mt-1">Identificado!</span>
                 </div>
               )}
             </div>
 
-            <div className="mt-3 text-[11px] font-mono font-bold text-slate-600 bg-white px-3 py-1 rounded-full border border-slate-200">
+            <div className="mt-3 text-[11px] font-mono font-bold text-slate-600 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
               {sector.qrCodeValue}
             </div>
           </div>
 
-          {/* Botões de Leitura / Simulação e Impressão */}
+          <p className="text-[10px] text-slate-400 leading-tight">
+            ✅ QR Code válido e escaneável • Contém link direto para o checklist deste setor
+          </p>
+
+          {/* Botões de Ação */}
           <div className="space-y-3">
             <button
               type="button"
@@ -107,14 +186,25 @@ export default function QrCodeModal({ sector, isOpen, onClose, onScanSuccess }) 
               <span>{scanning ? 'Escaneando código...' : 'Simular Leitura (Abrir Setor Direto)'}</span>
             </button>
 
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="w-full py-2.5 px-4 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs transition-colors flex items-center justify-center gap-2 border border-slate-200"
-            >
-              <Printer className="w-4 h-4" />
-              <span>Imprimir Etiqueta do Setor</span>
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleDownload}
+                className="py-2.5 px-4 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs transition-colors flex items-center justify-center gap-2 border border-slate-200"
+              >
+                <Download className="w-4 h-4" />
+                <span>Baixar PNG</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="py-2.5 px-4 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs transition-colors flex items-center justify-center gap-2 border border-slate-200"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Imprimir</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
