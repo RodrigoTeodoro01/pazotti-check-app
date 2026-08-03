@@ -29,6 +29,35 @@ export function AppProvider({ children }) {
   const [selectedSectorId, setSelectedSectorId] = useState('escritorios');
   const [selectedTaskType, setSelectedTaskType] = useState('limpeza'); // 'limpeza' | 'manutencao'
 
+  // Leitura de QR Code via URL: ?sector=escritorios
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sectorFromUrl = params.get('sector');
+    if (sectorFromUrl) {
+      // Salva o setor pendente (persiste mesmo se precisar fazer login)
+      sessionStorage.setItem('pazotti_pending_sector', sectorFromUrl);
+      // Limpa o parâmetro da URL para não reprocessar
+      const cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState({}, '', cleanUrl);
+    }
+  }, []);
+
+  // Quando o usuário faz login e há um setor pendente do QR Code, navega direto
+  useEffect(() => {
+    if (user) {
+      const pendingSector = sessionStorage.getItem('pazotti_pending_sector');
+      if (pendingSector) {
+        sessionStorage.removeItem('pazotti_pending_sector');
+        // Pequeno delay para garantir que o contexto já renderizou
+        setTimeout(() => {
+          setSelectedSectorId(pendingSector);
+          setSelectedTaskType('limpeza');
+          setActiveTab('cleaning');
+        }, 300);
+      }
+    }
+  }, [user]);
+
   // Ao mudar de unidade, aplicar data-unit no HTML/CSS raiz
   useEffect(() => {
     if (currentUnit) {
