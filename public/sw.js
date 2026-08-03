@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pazotti-check-cache-v1';
+const CACHE_NAME = 'pazotti-check-cache-v2';
 const ASSETS_TO_CACHE = [
   '/pazotti-check-app/',
   '/pazotti-check-app/index.html',
@@ -28,29 +28,31 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Estratégia Network-First: tenta rede primeiro, depois cache
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+    fetch(event.request)
+      .then((networkResponse) => {
+        // Se a resposta da rede for válida, atualiza o cache
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
         }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
         return networkResponse;
-      }).catch(() => {
-        // Fallback p/ navegação offline se indisponível na rede
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
-        }
-      });
-    })
+      })
+      .catch(() => {
+        // Sem rede: serve do cache
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          // Fallback para navegação offline
+          if (event.request.mode === 'navigate') {
+            return caches.match('/pazotti-check-app/');
+          }
+        });
+      })
   );
 });
