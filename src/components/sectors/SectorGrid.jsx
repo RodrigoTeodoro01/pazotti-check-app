@@ -82,9 +82,14 @@ export default function SectorGrid() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {availableSectors.map((sector) => {
           // Checa se há alguma tarefa feita hoje neste setor para a unidade selecionada
-          const completedToday = cleaningTasks.some(
-            (t) => t.unitId === currentUnit?.id && t.sectorId === sector.id && t.date === todayStr
-          );
+          const completedToday = cleaningTasks.some((t) => {
+            if (t.unitId !== currentUnit?.id || t.date !== todayStr) return false;
+            if (t.sectorId === sector.id) return true;
+            if (String(t.sectorId).toLowerCase() === String(sector.name).toLowerCase()) return true;
+            if (String(t.sectorName || '').toLowerCase() === String(sector.name).toLowerCase()) return true;
+            if (t.sectorId === 'escritorios' && String(sector.name).toLowerCase().includes('escrit')) return true;
+            return false;
+          });
 
           return (
             <div

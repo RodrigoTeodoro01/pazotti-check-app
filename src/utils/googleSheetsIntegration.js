@@ -439,6 +439,20 @@ function normalizeSheetCleaningTask(task, idx) {
     validDate = new Date().toISOString().split('T')[0];
   }
 
+  // Corrige inversão de dia e mês (ex: 2026-03-08 vindo de Apps Script em inglês para o dia 03/08/2026)
+  const mIso = validDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (mIso) {
+    const yr = mIso[1];
+    const p1 = parseInt(mIso[2], 10);
+    const p2 = parseInt(mIso[3], 10);
+    const nowMonth = new Date().getMonth() + 1;
+    if (p1 !== nowMonth && p2 === nowMonth) {
+      const fixedMo = ('0' + p2).slice(-2);
+      const fixedDay = ('0' + p1).slice(-2);
+      validDate = `${yr}-${fixedMo}-${fixedDay}`;
+    }
+  }
+
   // 2. Garante ID do setor correto para setores personalizados ou padrão da planilha
   let finalSectorId = task.sectorId || 'escritorios';
   const rawSectorName = String(task.sectorName || task.setor || task.sectorId || '').trim();
