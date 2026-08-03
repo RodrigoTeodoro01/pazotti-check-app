@@ -126,7 +126,7 @@ export default function InitialLoginScreen() {
       {/* Marca d'água tecnológica de fundo */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-15 overflow-hidden">
         <img
-          src="/logo-pazotti-analises.jpg"
+          src={`${import.meta.env.BASE_URL}logo-pazotti-analises.jpg`}
           alt="Marca d'água Pazotti Análises de Vendas"
           className="w-full max-w-5xl object-contain filter"
         />
@@ -143,7 +143,7 @@ export default function InitialLoginScreen() {
           
           <div className="w-48 sm:w-64 h-32 mx-auto mb-4 overflow-hidden rounded-2xl border border-cyan-400/40 shadow-[0_0_30px_rgba(6,182,212,0.3)] bg-slate-950 flex items-center justify-center p-2">
             <img 
-              src="/logo-pazotti-analises.jpg" 
+              src={`${import.meta.env.BASE_URL}logo-pazotti-analises.jpg`} 
               alt="Pazotti Time de Análises de Vendas" 
               className="w-full h-full object-contain rounded-xl"
             />

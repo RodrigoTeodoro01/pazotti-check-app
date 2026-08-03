@@ -74,7 +74,7 @@ function MainApp() {
       {/* Marca d'água de background do portal */}
       <div className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center opacity-[0.07] overflow-hidden">
         <img
-          src="/logo-pazotti-analises.jpg"
+          src={`${import.meta.env.BASE_URL}logo-pazotti-analises.jpg`}
           alt="Marca d'água Pazotti Análises de Vendas"
           className="w-full max-w-4xl object-contain filter"
         />

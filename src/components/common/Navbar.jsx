@@ -33,7 +33,7 @@ export default function Navbar({ onOpenLogin, onOpenUnitSelector }) {
         >
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-950 text-white shadow-md group-hover:scale-105 transition-transform overflow-hidden border border-cyan-500/40 shrink-0">
             <img 
-              src="/logo-pazotti-analises.jpg" 
+              src={`${import.meta.env.BASE_URL}logo-pazotti-analises.jpg`} 
               alt="Logotipo Time de Análises de Vendas" 
               className="w-full h-full object-cover" 
             />
