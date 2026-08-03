@@ -146,7 +146,7 @@ function getSheetChecklistsList(doc) {
   for (var i = 1; i < data.length; i++) {
     var questao = String(data[i][questaoIdx] || '').trim();
     if (!questao) continue;
-    var pazo = (pazottiIdx >= 0) ? String(data[i][pazottiIdx] || 'TODAS').trim() : 'TODAS';
+    var pazo = (pazottiIdx >= 0) ? String(data[i][pazottiIdx] || '').trim() : '';
     items.push({
       pazotti: pazo,
       unidade: pazo,

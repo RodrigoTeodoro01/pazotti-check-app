@@ -305,21 +305,36 @@ export function getCachedSheetChecklists() {
  * Verifica se um item do checklist pertence à unidade/Pazotti atual
  */
 export function isItemForCurrentUnit(item, currentUnit) {
-  if (!item.pazotti || ['TODAS', 'ALL', 'GERAL', 'QUALQUER', 'TODOS', ''].includes(String(item.pazotti).trim().toUpperCase())) {
+  if (!item || !currentUnit) return true;
+  const pazoRaw = String(item.pazotti || item.unidade || '').trim();
+  if (!pazoRaw || ['TODAS', 'ALL', 'GERAL', 'QUALQUER', 'TODOS'].includes(pazoRaw.toUpperCase())) {
     return true;
   }
-  const itemPazo = String(item.pazotti).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  const itemPazo = pazoRaw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   const unitName = (currentUnit?.name || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   const unitId = (currentUnit?.id || '').toLowerCase().trim();
 
-  return (
-    unitName.includes(itemPazo) ||
-    itemPazo.includes(unitName) ||
-    (unitId && (unitId.includes(itemPazo) || itemPazo.includes(unitId))) ||
-    (itemPazo === 'matriz' && unitName.includes('matriz')) ||
-    (itemPazo === 'triangulo' && unitName.includes('triangulo')) ||
-    (itemPazo === 'pazotti' && unitName === 'pazotti geral')
-  );
+  // Correspondência explícita por unidade
+  if (itemPazo.includes('matriz') && unitId === 'matriz') return true;
+  if (itemPazo.includes('filial') && unitId === 'filial') return true;
+  if ((itemPazo.includes('frios') || itemPazo.includes('congelados')) && unitId === 'frios') return true;
+  if ((itemPazo.includes('food') || itemPazo.includes('lanch')) && unitId === 'food') return true;
+  if ((itemPazo.includes('triangulo') || itemPazo.includes('uberl')) && unitId === 'triangulo') return true;
+
+  // Se o item mencionou explicitamente uma unidade e não foi a atual, rejeitar
+  if (
+    itemPazo.includes('matriz') ||
+    itemPazo.includes('filial') ||
+    itemPazo.includes('frios') ||
+    itemPazo.includes('congelados') ||
+    itemPazo.includes('food') ||
+    itemPazo.includes('triangulo') ||
+    itemPazo.includes('uberl')
+  ) {
+    return false;
+  }
+
+  return unitName.includes(itemPazo) || itemPazo.includes(unitId);
 }
 
 /**
@@ -334,7 +349,7 @@ export function getAvailableSectorsForUnit(currentUnit) {
 
   const unitItems = sheetChecklists.filter((item) => isItemForCurrentUnit(item, currentUnit));
   if (unitItems.length === 0) {
-    return SECTORS_DATA;
+    return []; // Retorna lista vazia (zerado) para esta unidade caso não constem setores na planilha!
   }
 
   const uniqueSectorNames = [];
@@ -357,8 +372,9 @@ export function getAvailableSectorsForUnit(currentUnit) {
     }
   });
 
-  return uniqueSectorNames.length > 0 ? uniqueSectorNames : SECTORS_DATA;
+  return uniqueSectorNames;
 }
+
 
 /**
  * Retorna a lista de itens concluídos da tarefa para exibição na Fila de Aprovação.

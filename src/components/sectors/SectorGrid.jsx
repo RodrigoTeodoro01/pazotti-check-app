@@ -66,8 +66,21 @@ export default function SectorGrid() {
       </div>
 
       {/* Grid de Setores Dinâmicos por Pazotti */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {availableSectors.map((sector) => {
+      {availableSectors.length === 0 ? (
+        <div className="bg-white rounded-3xl p-10 border-2 border-dashed border-slate-300 text-center max-w-xl mx-auto my-8 shadow-sm">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
+            <ClipboardCheck className="w-8 h-8" />
+          </div>
+          <h3 className="text-xl font-black text-slate-800 mb-2">
+            Nenhum Setor ou Rotina de Limpeza
+          </h3>
+          <p className="text-sm text-slate-500 leading-relaxed">
+            A unidade <strong>{currentUnit?.name}</strong> está zerada e não possui setores vinculados na planilha (aba <em>Checklist Limpeza</em>).
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {availableSectors.map((sector) => {
           // Checa se há alguma tarefa feita hoje neste setor para a unidade selecionada
           const completedToday = cleaningTasks.some(
             (t) => t.unitId === currentUnit?.id && t.sectorId === sector.id && t.date === todayStr
@@ -132,6 +145,7 @@ export default function SectorGrid() {
           );
         })}
       </div>
+      )}
 
       {/* Modal do QR Code Studio */}
       <QrCodeModal

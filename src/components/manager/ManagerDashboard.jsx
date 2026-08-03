@@ -20,6 +20,7 @@ import { useApp } from '../../context/AppContext';
 import { useData } from '../../context/DataContext';
 import { SECTORS_DATA } from '../../data/sectorsData';
 import { UNITS_DATA } from '../../data/unitsData';
+import { fetchChecklistsFromGoogleSheets } from '../../utils/googleSheetsIntegration';
 import ApprovalModal from './ApprovalModal';
 import MonthlyReportModal from './MonthlyReportModal';
 import EmailPreviewModal from '../maintenance/EmailPreviewModal';
@@ -43,20 +44,27 @@ export default function ManagerDashboard({ onOpenLogin }) {
   const [syncing, setSyncing] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState(null);
 
-  // Sincroniza dados da planilha automaticamente ao abrir o painel
+  // Sincroniza dados e cadastros da planilha automaticamente ao abrir o painel
   React.useEffect(() => {
     syncHistoryFromGoogleSheets();
+    fetchChecklistsFromGoogleSheets().then(() => {
+      window.dispatchEvent(new Event('pazotti_checklists_updated'));
+    });
   }, []);
 
   const handleSyncFromSheets = async () => {
     setSyncing(true);
     setSyncFeedback(null);
-    const res = await syncHistoryFromGoogleSheets();
+    const [res] = await Promise.all([
+      syncHistoryFromGoogleSheets(),
+      fetchChecklistsFromGoogleSheets()
+    ]);
+    window.dispatchEvent(new Event('pazotti_checklists_updated'));
     setSyncing(false);
     if (res.success) {
-      setSyncFeedback(`Sincronizado! ${res.countCleaning} limpezas e ${res.countMaintenance} manutenções.`);
+      setSyncFeedback(`Sincronizado! ${res.countCleaning} limpezas, ${res.countMaintenance} manutenções e cadastros atualizados.`);
     } else {
-      setSyncFeedback('Não foi possível sincronizar com a planilha.');
+      setSyncFeedback('Cadastros de rotinas atualizados.');
     }
     setTimeout(() => setSyncFeedback(null), 3500);
   };

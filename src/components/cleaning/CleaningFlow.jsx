@@ -91,6 +91,9 @@ export default function CleaningFlow() {
           text: sheetItem.questao,
           completed: false,
         }));
+      } else if (sheetChecklists && sheetChecklists.length > 0) {
+        // Planilha conectada mas sem itens vinculados para esta unidade -> checklist zerado!
+        itemsToLoad = [];
       } else {
         const sectorChecklist = DEFAULT_CHECKLISTS[selectedSectorId] || DEFAULT_CHECKLISTS.escritorios;
         const freqList = sectorChecklist[frequency] || [];
@@ -309,8 +312,16 @@ export default function CleaningFlow() {
         ))}
 
         {items.length === 0 && (
-          <div className="text-center py-10 bg-slate-100/50 rounded-2xl text-slate-500 text-sm">
-            Nenhum item padrão configurado para esta frequência. Adicione um item personalizado abaixo.
+          <div className="text-center py-12 bg-white border-2 border-dashed border-slate-300 rounded-3xl p-6 shadow-sm my-6">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+              <ClipboardCheck className="w-6 h-6" />
+            </div>
+            <h4 className="font-extrabold text-slate-800 text-base mb-1">
+              Nenhuma Rotina de Limpeza Cadastrada
+            </h4>
+            <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+              A unidade <strong>{currentUnit?.name}</strong> está zerada e não possui itens vinculados na planilha (aba <em>Checklist Limpeza</em>) para o setor <strong>{currentSector?.name}</strong> na periodicidade <strong>{frequency}</strong>.
+            </p>
           </div>
         )}
       </div>
