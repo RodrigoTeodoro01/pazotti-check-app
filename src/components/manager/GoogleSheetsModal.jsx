@@ -252,7 +252,21 @@ function getSheetHistory(doc) {
     }
   }
   
-  return { cleaningTasks: cleaningTasks, maintenanceTickets: maintenanceTickets };
+  // Deduplica tarefas mantendo o status definitivo mais recente (Aprovado/Reprovado sobrepõe Aguardando)
+  var cleanMap = {};
+  for (var k = 0; k < cleaningTasks.length; k++) {
+    var taskObj = cleaningTasks[k];
+    var key = taskObj.unitId + '_' + taskObj.sectorId + '_' + taskObj.frequency + '_' + taskObj.date + '_' + taskObj.userName;
+    if (!cleanMap[key] || taskObj.status === 'approved' || taskObj.status === 'rejected') {
+      cleanMap[key] = taskObj;
+    }
+  }
+  var deduplicatedClean = [];
+  for (var keyInMap in cleanMap) {
+    deduplicatedClean.push(cleanMap[keyInMap]);
+  }
+  
+  return { cleaningTasks: deduplicatedClean, maintenanceTickets: maintenanceTickets };
 }
 
 function resolveUnitId(name) {
@@ -266,6 +280,7 @@ function resolveUnitId(name) {
 
 function resolveSectorId(name) {
   var s = String(name || '').toLowerCase();
+  if (s.indexOf('analise') >= 0 || s.indexOf('análise') >= 0 || s.indexOf('vendas') >= 0 || s.indexOf('compras') >= 0) return 'escritorios';
   if (s.indexOf('escrit') >= 0) return 'escritorios';
   if (s.indexOf('improprio') >= 0 || s.indexOf('impróprio') >= 0) return 'deposito-improprios';
   if (s.indexOf('merchan') >= 0) return 'deposito-merchan';

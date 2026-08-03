@@ -405,6 +405,22 @@ export function getTaskChecklistItems(task) {
 }
 
 /**
+ * Deduplica tarefas de limpeza mantendo a versão com o status mais recente (ex: Aprovado sobressai Aguardando aprovação)
+ */
+function deduplicateCleaningTasks(tasks) {
+  if (!Array.isArray(tasks)) return [];
+  const map = new Map();
+  tasks.forEach((t) => {
+    const key = `${t.unitId}_${t.sectorId}_${t.frequency}_${t.date}_${t.userName}`;
+    const existing = map.get(key);
+    if (!existing || t.status === 'approved' || t.status === 'rejected') {
+      map.set(key, t);
+    }
+  });
+  return Array.from(map.values());
+}
+
+/**
  * Busca o histórico de limpezas e manutenções gravados na planilha do Google Sheets (abas Limpeza_Checklists e Manutencao_Chamados)
  */
 export async function fetchHistoryFromGoogleSheets() {
@@ -415,9 +431,10 @@ export async function fetchHistoryFromGoogleSheets() {
     const response = await fetch(`${webhookUrl}?action=GET_HISTORY`);
     const result = await response.json();
     if (result && result.success) {
+      const cleanTasks = deduplicateCleaningTasks(result.cleaningTasks || []);
       return {
         success: true,
-        cleaningTasks: result.cleaningTasks || [],
+        cleaningTasks: cleanTasks,
         maintenanceTickets: result.maintenanceTickets || [],
       };
     }
@@ -433,9 +450,10 @@ export async function fetchHistoryFromGoogleSheets() {
     });
     const postResult = await postResponse.json();
     if (postResult && postResult.success) {
+      const cleanTasks = deduplicateCleaningTasks(postResult.cleaningTasks || []);
       return {
         success: true,
-        cleaningTasks: postResult.cleaningTasks || [],
+        cleaningTasks: cleanTasks,
         maintenanceTickets: postResult.maintenanceTickets || [],
       };
     }
