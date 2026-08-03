@@ -30,11 +30,19 @@ export default function CleaningFlow() {
   const [submittedMessage, setSubmittedMessage] = useState(null);
 
   const availableSectors = React.useMemo(() => getAvailableSectorsForUnit(currentUnit), [currentUnit]);
-  const currentSector = availableSectors.find((s) => s.id === selectedSectorId || s.name === selectedSectorId) || availableSectors[0] || SECTORS_DATA[0];
+  const matchSector = (s, selId) => {
+    if (!s || !selId) return false;
+    const sId = String(s.id || '').trim().toLowerCase();
+    const sName = String(s.name || '').trim().toLowerCase();
+    const target = String(selId).trim().toLowerCase();
+    return sId === target || sName === target || target.indexOf(sId) === 0 || sId.indexOf(target) === 0 || target.indexOf(sName) === 0 || sName.indexOf(target) === 0;
+  };
+
+  const currentSector = availableSectors.find((s) => matchSector(s, selectedSectorId)) || availableSectors[0] || SECTORS_DATA[0];
 
   // Garante que se o setor selecionado não existir na lista desta Pazotti, seleciona o primeiro setor disponível
   useEffect(() => {
-    if (availableSectors.length > 0 && !availableSectors.some((s) => s.id === selectedSectorId || s.name === selectedSectorId)) {
+    if (availableSectors.length > 0 && !availableSectors.some((s) => matchSector(s, selectedSectorId))) {
       setSelectedSectorId(availableSectors[0].id);
     }
   }, [availableSectors, selectedSectorId, setSelectedSectorId]);

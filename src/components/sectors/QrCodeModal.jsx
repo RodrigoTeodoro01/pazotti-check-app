@@ -11,7 +11,7 @@ export default function QrCodeModal({ sector, isOpen, onClose, onScanSuccess }) 
   useEffect(() => {
     if (isOpen && sector) {
       const baseUrl = window.location.origin + import.meta.env.BASE_URL;
-      const qrData = `${baseUrl}?sector=${sector.id}`;
+      const qrData = `${baseUrl}?sector=${encodeURIComponent(sector.id)}`;
       
       QRCode.toDataURL(qrData, {
         width: 400,
