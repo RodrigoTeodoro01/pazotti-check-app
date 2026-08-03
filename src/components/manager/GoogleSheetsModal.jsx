@@ -163,7 +163,16 @@ function getSheetHistory(doc) {
   var cleaningTasks = [];
   var maintenanceTickets = [];
   
-  var sheetClean = doc.getSheetByName('Limpeza_Checklists');
+  var sheets = doc.getSheets();
+  var sheetClean = null;
+  for (var s = 0; s < sheets.length; s++) {
+    var sName = String(sheets[s].getName()).trim().toLowerCase();
+    if (sName === 'limpeza_checklists' || sName.indexOf('limpeza_check') >= 0) {
+      sheetClean = sheets[s];
+      break;
+    }
+  }
+  
   if (sheetClean) {
     var dataClean = sheetClean.getDataRange().getValues();
     if (dataClean.length >= 2) {
