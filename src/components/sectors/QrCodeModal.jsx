@@ -1,28 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { QrCode, Camera, Printer, X, Check, ScanLine, Download } from 'lucide-react';
-import { renderQrToDataUrl } from '../../utils/qrCodeGenerator';
+import QRCode from 'qrcode';
 
 export default function QrCodeModal({ sector, isOpen, onClose, onScanSuccess }) {
   const [scanning, setScanning] = useState(false);
   const [simulatedScan, setSimulatedScan] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState(null);
-  const printRef = useRef(null);
 
   // Gera o QR Code real quando o modal abre
   useEffect(() => {
     if (isOpen && sector) {
-      // Dados que o QR Code vai conter: URL do app + setor
       const baseUrl = window.location.origin + import.meta.env.BASE_URL;
       const qrData = `${baseUrl}?sector=${sector.id}`;
       
-      try {
-        const dataUrl = renderQrToDataUrl(qrData, 8, 4);
-        setQrDataUrl(dataUrl);
-      } catch (err) {
-        console.warn('Fallback para QR Code via API:', err);
-        // Fallback para API online
-        setQrDataUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrData)}&format=png&margin=8`);
-      }
+      QRCode.toDataURL(qrData, {
+        width: 400,
+        margin: 2,
+        color: {
+          dark: '#0f172a',
+          light: '#ffffff',
+        },
+        errorCorrectionLevel: 'M',
+      })
+        .then((url) => setQrDataUrl(url))
+        .catch((err) => console.error('Erro ao gerar QR Code:', err));
     }
   }, [isOpen, sector]);
 
@@ -87,7 +88,7 @@ export default function QrCodeModal({ sector, isOpen, onClose, onScanSuccess }) 
           window.onload = function() { 
             setTimeout(function() { window.print(); }, 300); 
           };
-        </script>
+        <\/script>
       </body>
       </html>
     `);
@@ -131,10 +132,7 @@ export default function QrCodeModal({ sector, isOpen, onClose, onScanSuccess }) 
           </p>
 
           {/* QR Code Real */}
-          <div 
-            ref={printRef}
-            className="bg-white border-2 border-slate-200 rounded-2xl p-5 max-w-[260px] mx-auto flex flex-col items-center justify-center shadow-sm"
-          >
+          <div className="bg-white border-2 border-slate-200 rounded-2xl p-5 max-w-[260px] mx-auto flex flex-col items-center justify-center shadow-sm">
             <div className="w-48 h-48 flex items-center justify-center relative">
               {qrDataUrl ? (
                 <img 
