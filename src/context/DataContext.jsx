@@ -5,7 +5,8 @@ import { SECTORS_DATA } from '../data/sectorsData';
 import { 
   sendCleaningToGoogleSheets, 
   sendMaintenanceToGoogleSheets, 
-  sendMaintenanceStatusUpdateToGoogleSheets 
+  sendMaintenanceStatusUpdateToGoogleSheets,
+  fetchHistoryFromGoogleSheets
 } from '../utils/googleSheetsIntegration';
 
 const DataContext = createContext();
@@ -273,6 +274,22 @@ export function DataProvider({ children }) {
     localStorage.removeItem('pazotti_offline_queue');
   };
 
+  const syncHistoryFromGoogleSheets = async () => {
+    const res = await fetchHistoryFromGoogleSheets();
+    if (res.success) {
+      setCleaningTasks(res.cleaningTasks);
+      setMaintenanceTickets(res.maintenanceTickets);
+      localStorage.setItem('pazotti_cleaning_tasks', JSON.stringify(res.cleaningTasks));
+      localStorage.setItem('pazotti_maint_tickets', JSON.stringify(res.maintenanceTickets));
+      return { 
+        success: true, 
+        countCleaning: res.cleaningTasks.length, 
+        countMaintenance: res.maintenanceTickets.length 
+      };
+    }
+    return { success: false };
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -289,6 +306,7 @@ export function DataProvider({ children }) {
         syncOfflineQueue,
         getUnitStatistics,
         clearAllLocalHistory,
+        syncHistoryFromGoogleSheets,
       }}
     >
       {children}

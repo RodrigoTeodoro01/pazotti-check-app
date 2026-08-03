@@ -47,6 +47,10 @@ const APPS_SCRIPT_CODE = `function doPost(e) {
       var checklists = getSheetChecklistsList(doc);
       return ContentService.createTextOutput(JSON.stringify({ success: true, checklists: checklists }))
         .setMimeType(ContentService.MimeType.JSON);
+    } else if (action === 'GET_HISTORY') {
+      var history = getSheetHistory(doc);
+      return ContentService.createTextOutput(JSON.stringify({ success: true, cleaningTasks: history.cleaningTasks, maintenanceTickets: history.maintenanceTickets }))
+        .setMimeType(ContentService.MimeType.JSON);
     } else if (action === 'TEST_CONNECTION') {
       var sheet = doc.getSheetByName('Log_Testes') || doc.insertSheet('Log_Testes');
       sheet.appendRow([d.dataHora, d.mensagem]);
@@ -155,6 +159,124 @@ function getSheetChecklistsList(doc) {
   return items;
 }
 
+function getSheetHistory(doc) {
+  var cleaningTasks = [];
+  var maintenanceTickets = [];
+  
+  var sheetClean = doc.getSheetByName('Limpeza_Checklists');
+  if (sheetClean) {
+    var dataClean = sheetClean.getDataRange().getValues();
+    if (dataClean.length >= 2) {
+      for (var i = 1; i < dataClean.length; i++) {
+        var r = dataClean[i];
+        var dh = r[0];
+        var un = String(r[1] || '').trim();
+        var st = String(r[2] || '').trim();
+        var pr = String(r[3] || '').trim();
+        var cb = String(r[4] || '').trim();
+        var it = String(r[5] || '0/0').trim();
+        var stt = String(r[7] || '').trim().toLowerCase();
+        
+        if (!un && !st) continue;
+        
+        var status = 'pending';
+        if (stt.indexOf('aprovad') >= 0) status = 'approved';
+        if (stt.indexOf('reprovad') >= 0) status = 'rejected';
+        
+        var parts = it.split('/');
+        var comp = parseInt(parts[0]) || 0;
+        var tot = parseInt(parts[1]) || comp || 1;
+        
+        var freq = 'diaria';
+        var prLow = pr.toLowerCase();
+        if (prLow.indexOf('sem') >= 0) freq = 'semanal';
+        if (prLow.indexOf('men') >= 0) freq = 'mensal';
+        
+        var dateStr = '';
+        try {
+          dateStr = dh ? new Date(dh).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        } catch(e) {
+          dateStr = new Date().toISOString().split('T')[0];
+        }
+        
+        cleaningTasks.push({
+          id: 'sheet-clean-' + i,
+          unitId: resolveUnitId(un),
+          sectorId: resolveSectorId(st),
+          frequency: freq,
+          completedItems: comp,
+          totalItems: tot,
+          userName: cb || 'Colaborador',
+          completedAt: dh ? String(dh) : new Date().toISOString(),
+          date: dateStr,
+          status: status,
+          rejectReason: String(r[8] || ''),
+          beforePhotos: [],
+          afterPhotos: []
+        });
+      }
+    }
+  }
+  
+  var sheetMaint = doc.getSheetByName('Manutencao_Chamados');
+  if (sheetMaint) {
+    var dataMaint = sheetMaint.getDataRange().getValues();
+    if (dataMaint.length >= 2) {
+      for (var j = 1; j < dataMaint.length; j++) {
+        var m = dataMaint[j];
+        var dhM = m[0];
+        var unM = String(m[1] || '').trim();
+        var stM = String(m[2] || '').trim();
+        var prio = String(m[3] || 'Corretiva').trim();
+        var sol = String(m[4] || '').trim();
+        var desc = String(m[5] || '').trim();
+        var obs = String(m[6] || '').trim();
+        var sttM = String(m[7] || 'Aberto').trim();
+        
+        if (!unM && !stM && !desc) continue;
+        if (sol === 'Atualização de Status') continue;
+        
+        maintenanceTickets.push({
+          id: 'sheet-maint-' + j,
+          unitId: resolveUnitId(unM),
+          sectorId: resolveSectorId(stM),
+          priority: prio,
+          description: desc,
+          comments: obs,
+          photos: [],
+          status: sttM,
+          authorName: sol || 'Colaborador',
+          createdAt: dhM ? String(dhM) : new Date().toISOString()
+        });
+      }
+    }
+  }
+  
+  return { cleaningTasks: cleaningTasks, maintenanceTickets: maintenanceTickets };
+}
+
+function resolveUnitId(name) {
+  var n = String(name || '').toLowerCase();
+  if (n.indexOf('matriz') >= 0) return 'matriz';
+  if (n.indexOf('filial') >= 0 || n.indexOf('depósito') >= 0 || n.indexOf('deposito') >= 0) return 'filial';
+  if (n.indexOf('frios') >= 0 || n.indexOf('congelados') >= 0) return 'frios';
+  if (n.indexOf('triangulo') >= 0 || n.indexOf('triângulo') >= 0 || n.indexOf('uberlândia') >= 0 || n.indexOf('uberlandia') >= 0) return 'triangulo';
+  return 'geral';
+}
+
+function resolveSectorId(name) {
+  var s = String(name || '').toLowerCase();
+  if (s.indexOf('escrit') >= 0) return 'escritorios';
+  if (s.indexOf('improprio') >= 0 || s.indexOf('impróprio') >= 0) return 'deposito-improprios';
+  if (s.indexOf('merchan') >= 0) return 'deposito-merchan';
+  if (s.indexOf('produto') >= 0 || s.indexOf('depósito') >= 0 || s.indexOf('deposito') >= 0) return 'deposito-produtos';
+  if (s.indexOf('banheiro') >= 0 && s.indexOf('escrit') >= 0) return 'banheiros-escritorio';
+  if (s.indexOf('banheiro') >= 0) return 'banheiros-deposito';
+  if (s.indexOf('cozinha') >= 0) return 'cozinha';
+  if (s.indexOf('refeit') >= 0) return 'refeitorio';
+  return 'escritorios';
+}
+
 function doGet(e) {
   var doc = SpreadsheetApp.getActiveSpreadsheet();
   var action = (e && e.parameter) ? e.parameter.action : '';
@@ -166,6 +288,10 @@ function doGet(e) {
   } else if (action === 'GET_CHECKLISTS') {
     var checklists = getSheetChecklistsList(doc);
     return ContentService.createTextOutput(JSON.stringify({ success: true, checklists: checklists }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } else if (action === 'GET_HISTORY') {
+    var history = getSheetHistory(doc);
+    return ContentService.createTextOutput(JSON.stringify({ success: true, cleaningTasks: history.cleaningTasks, maintenanceTickets: history.maintenanceTickets }))
       .setMimeType(ContentService.MimeType.JSON);
   }
   

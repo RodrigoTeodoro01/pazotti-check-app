@@ -13,7 +13,8 @@ import {
   Flame,
   Table,
   UserCircle,
-  Trash2
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useData } from '../../context/DataContext';
@@ -35,8 +36,30 @@ export default function ManagerDashboard({ onOpenLogin }) {
     rejectCleaningTask, 
     updateMaintenanceStatus,
     getUnitStatistics,
-    clearAllLocalHistory
+    clearAllLocalHistory,
+    syncHistoryFromGoogleSheets
   } = useData();
+
+  const [syncing, setSyncing] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState(null);
+
+  // Sincroniza dados da planilha automaticamente ao abrir o painel
+  React.useEffect(() => {
+    syncHistoryFromGoogleSheets();
+  }, []);
+
+  const handleSyncFromSheets = async () => {
+    setSyncing(true);
+    setSyncFeedback(null);
+    const res = await syncHistoryFromGoogleSheets();
+    setSyncing(false);
+    if (res.success) {
+      setSyncFeedback(`Sincronizado! ${res.countCleaning} limpezas e ${res.countMaintenance} manutenções.`);
+    } else {
+      setSyncFeedback('Não foi possível sincronizar com a planilha.');
+    }
+    setTimeout(() => setSyncFeedback(null), 3500);
+  };
 
   const handleClearHistory = () => {
     if (window.confirm('Deseja zerar todo o histórico acumulado no aplicativo? Esta ação limpa os dados e estatísticas salvos no navegador para ficar 100% limpo com a sua planilha.')) {
@@ -91,6 +114,13 @@ export default function ManagerDashboard({ onOpenLogin }) {
         </div>
       )}
 
+      {/* Feedback de Sincronização */}
+      {syncFeedback && (
+        <div className="bg-emerald-100 border border-emerald-300 text-emerald-900 px-4 py-2.5 rounded-2xl text-xs font-extrabold text-center animate-fade-in mb-4 shadow-sm">
+          ✅ {syncFeedback}
+        </div>
+      )}
+
       {/* Cabeçalho do Painel */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
@@ -105,23 +135,33 @@ export default function ManagerDashboard({ onOpenLogin }) {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={onOpenLogin}
-            className="px-5 py-3 rounded-2xl bg-unit-primary hover:bg-unit-secondary text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 shrink-0 border border-white/20"
+            className="px-4 py-3 rounded-2xl bg-unit-primary hover:bg-unit-secondary text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 shrink-0 border border-white/20"
           >
             <UserCircle className="w-4 h-4 text-white" />
-            <span>Entrar / Mudar Usuário</span>
+            <span>Mudar Usuário</span>
+          </button>
+
+          <button
+            onClick={handleSyncFromSheets}
+            disabled={syncing}
+            className="px-4 py-3 rounded-2xl bg-cyan-700 hover:bg-cyan-800 text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 shrink-0"
+            title="Buscar histórico atualizado da planilha do Google Drive"
+          >
+            <RefreshCw className={`w-4 h-4 text-cyan-200 ${syncing ? 'animate-spin' : ''}`} />
+            <span>{syncing ? 'Sincronizando...' : 'Sincronizar Planilha'}</span>
           </button>
 
           <button
             onClick={() => setShowGoogleSheets(true)}
-            className="px-5 py-3 rounded-2xl bg-emerald-800 hover:bg-emerald-900 text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 shrink-0"
+            className="px-4 py-3 rounded-2xl bg-emerald-800 hover:bg-emerald-900 text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 shrink-0"
           >
             <Table className="w-4 h-4 text-emerald-300" />
-            <span>Planilha Google Drive</span>
+            <span>Planilha Drive</span>
           </button>
 
           <button
             onClick={() => setShowMonthlyReport(true)}
-            className="px-5 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 shrink-0"
+            className="px-4 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2 shrink-0"
           >
             <FileText className="w-4 h-4 text-unit-secondary" />
             <span>Relatório Mensal</span>

@@ -404,3 +404,46 @@ export function getTaskChecklistItems(task) {
   }));
 }
 
+/**
+ * Busca o histórico de limpezas e manutenções gravados na planilha do Google Sheets (abas Limpeza_Checklists e Manutencao_Chamados)
+ */
+export async function fetchHistoryFromGoogleSheets() {
+  const webhookUrl = getGoogleSheetsWebhookUrl();
+  if (!webhookUrl) return { success: false, cleaningTasks: [], maintenanceTickets: [] };
+
+  try {
+    const response = await fetch(`${webhookUrl}?action=GET_HISTORY`);
+    const result = await response.json();
+    if (result && result.success) {
+      return {
+        success: true,
+        cleaningTasks: result.cleaningTasks || [],
+        maintenanceTickets: result.maintenanceTickets || [],
+      };
+    }
+  } catch (err) {
+    console.warn('[Google Sheets] GET_HISTORY via GET falhou, tentando POST...', err);
+  }
+
+  try {
+    const postResponse = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'GET_HISTORY' }),
+    });
+    const postResult = await postResponse.json();
+    if (postResult && postResult.success) {
+      return {
+        success: true,
+        cleaningTasks: postResult.cleaningTasks || [],
+        maintenanceTickets: postResult.maintenanceTickets || [],
+      };
+    }
+  } catch (postErr) {
+    console.error('[Google Sheets] GET_HISTORY via POST falhou:', postErr);
+  }
+
+  return { success: false, cleaningTasks: [], maintenanceTickets: [] };
+}
+
+
